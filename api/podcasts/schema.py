@@ -1,5 +1,6 @@
 import graphene
 from graphene_django import DjangoObjectType
+from django.db import IntegrityError
 
 from .models import Podcast
 
@@ -17,6 +18,7 @@ class Query(graphene.ObjectType):
 
 
 class CreatePodcast(graphene.Mutation):
+    id = graphene.Int()
     title = graphene.String()
     author = graphene.String()
     description = graphene.String()
@@ -42,19 +44,23 @@ class CreatePodcast(graphene.Mutation):
 
     def mutate(self, info, **kwargs):
         podcast = Podcast(
-            title=title,
-            author=author,
-            description=description,
-            url=url,
-            episodesSortOrder=episodesSortOrder,
-            language=language,
-            categories=categories,
-            thumbnailurl=thumbnailurl,
-            thumbnailSmall=thumbnailSmall,
-            mediatype=mediatype
+            title=kwargs.get('title'),
+            author=kwargs.get('author'),
+            description=kwargs.get('description'),
+            url=kwargs.get('url'),
+            episodesSortOrder=kwargs.get('episodesSortOrder'),
+            language=kwargs.get('language'),
+            categories=kwargs.get('categories'),
+            thumbnailurl=kwargs.get('thumbnailurl'),
+            thumbnailSmall=kwargs.get('thumbnailSmall'),
+            mediatype=kwargs.get('mediatype')
         )
 
-        podcast.save()
+        try:
+            podcast.save()
+        except IntegrityError:
+            print('dupe')
+            pass
 
         return CreatePodcast(
             id=podcast.id,

@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import ArrayField
 
 # Create your models here.
 class Podcast(models.Model):
-    title = models.CharField(max_length=256)
+    title = models.CharField(max_length=256, unique=True)
     author = models.CharField(max_length=256)
     description = models.TextField(blank=True)
     url = models.URLField()
