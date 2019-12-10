@@ -1,8 +1,11 @@
 import graphene
 from graphene_django import DjangoObjectType
+from graphql import GraphQLError
 from django.db import IntegrityError
+from django.db.models import Q
 
-from .models import Podcast
+from users.schema import UserType
+from .models import Podcast, Comment
 
 
 class PodcastType(DjangoObjectType):
@@ -10,15 +13,28 @@ class PodcastType(DjangoObjectType):
         model = Podcast
 
 
+class CommentType(DjangoObjectType):
+    class Meta:
+        model = Comment
+
+
 class Query(graphene.ObjectType):
     podcasts = graphene.List(PodcastType)
+
+    comments = graphene.List(
+        CommentType,
+        podcastId=graphene.ID()
+    )
 
     def resolve_podcasts(self, info, **kwargs):
         return Podcast.objects.all()
 
+    def resolve_comments(self, info, podcastId, **kwargs):
+        return Comment.objects.filter(podcast=podcastId)
+
 
 class CreatePodcast(graphene.Mutation):
-    id = graphene.Int()
+    id = graphene.ID()
     title = graphene.String()
     author = graphene.String()
     description = graphene.String()
@@ -75,5 +91,43 @@ class CreatePodcast(graphene.Mutation):
             thumbnailSmall=podcast.thumbnailSmall,
             mediatype=podcast.mediatype
         )
+
+
+class CreateComment(graphene.Mutation):
+    id = graphene.ID()
+    body = graphene.String()
+    date = graphene.DateTime()
+    posted_by = graphene.Field(UserType)
+
+    class Arguments:
+        podcast_id = graphene.ID()
+        body = graphene.String()
+
+    def mutate(self, info, podcast_id, body):
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('You must be logged in to post a comment')
+
+        podcast = Podcast.objects.filter(id=podcast_id).first()
+        if not podcast:
+            raise GraphQLError('Invalid Podcast')
+
+        comment = Comment(
+            body=body,
+            posted_by=user,
+            podcast=podcast
+        )
+
+        comment.save()
+
+        return CreateComment(
+            id=comment.id,
+            body=comment.body,
+            date=comment.date,
+            posted_by=comment.posted_by
+        )
+
+
 class Mutation(graphene.ObjectType):
-    create_podcast = CreatePodcast.Field()
+    create_podcast = CreatePodcast.Field(),
+    create_comment = CreateComment.Field()
