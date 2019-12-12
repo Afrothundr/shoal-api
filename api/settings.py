@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
-    'podcasts'
+    'podcasts',
+    'users',
+    'profiles'
 ]
 
 MIDDLEWARE = [
@@ -133,6 +135,7 @@ USE_TZ = True
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles.media')
 STATIC_URL = '/static/'
 
 GRAPHENE = {

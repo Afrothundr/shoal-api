@@ -2,6 +2,7 @@ import graphene
 import graphql_jwt
 import users.schema
 import podcasts.schema
+import profiles.schema
 
 
 
