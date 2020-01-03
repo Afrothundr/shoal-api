@@ -1,4 +1,6 @@
 import graphene
+import requests
+import os
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from django.db import IntegrityError
@@ -26,12 +28,22 @@ class Query(graphene.ObjectType):
         podcastId=graphene.ID()
     )
 
+    best_podcasts = graphene.JSONString()
+
     def resolve_podcasts(self, info, **kwargs):
         return Podcast.objects.all()
 
     def resolve_comments(self, info, podcastId, **kwargs):
-        return Comment.objects.filter(podcast=podcastId)
+        return Comment.objects.filter(podcast_id=podcastId)
 
+    def resolve_best_podcasts(self, info, **kwargs):
+        url = 'https://listen-api.listennotes.com/api/v2' + '/best_podcasts?page=1&region=us'
+        headers = {
+            'X-ListenAPI-Key': '3d8a976921b74c54a9ea8917073d49e2',
+        }
+        response = requests.request('GET', url, headers=headers)
+        
+        return response.json()
 
 class CreatePodcast(graphene.Mutation):
     id = graphene.ID()
@@ -94,7 +106,7 @@ class CreatePodcast(graphene.Mutation):
 
 
 class CreateComment(graphene.Mutation):
-    id = graphene.ID()
+    podcast_id = graphene.ID()
     body = graphene.String()
     date = graphene.DateTime()
     posted_by = graphene.Field(UserType)
@@ -108,26 +120,16 @@ class CreateComment(graphene.Mutation):
         if user.is_anonymous:
             raise GraphQLError('You must be logged in to post a comment')
 
-        podcast = Podcast.objects.filter(id=podcast_id).first()
-        if not podcast:
-            raise GraphQLError('Invalid Podcast')
-
         comment = Comment(
+            podcast_id=podcast_id,
             body=body,
-            posted_by=user,
-            podcast=podcast
+            posted_by=user
         )
 
         comment.save()
 
-        return CreateComment(
-            id=comment.id,
-            body=comment.body,
-            date=comment.date,
-            posted_by=comment.posted_by
-        )
+        return CreateComment(comment=comment)
 
 
 class Mutation(graphene.ObjectType):
-    create_podcast = CreatePodcast.Field(),
     create_comment = CreateComment.Field()
