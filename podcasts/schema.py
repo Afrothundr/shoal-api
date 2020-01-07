@@ -1,6 +1,7 @@
 import graphene
 import requests
 import os
+import environ
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from django.db import IntegrityError
@@ -37,13 +38,21 @@ class Query(graphene.ObjectType):
         return Comment.objects.filter(podcast_id=podcastId)
 
     def resolve_best_podcasts(self, info, **kwargs):
-        url = 'https://listen-api.listennotes.com/api/v2' + '/best_podcasts?page=1&region=us'
+
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        env_file = os.path.join(BASE_DIR, '.env')
+
+        env = environ.Env()
+        # reading .env file
+        environ.Env.read_env(env_file)
+        url = env('API_BASE_URL') + '/best_podcasts?page=1&region=us'
         headers = {
-            'X-ListenAPI-Key': '3d8a976921b74c54a9ea8917073d49e2',
+            'X-ListenAPI-Key': env('API_KEY'),
         }
         response = requests.request('GET', url, headers=headers)
-        
+
         return response.json()
+
 
 class CreatePodcast(graphene.Mutation):
     id = graphene.ID()
