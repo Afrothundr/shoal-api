@@ -19,7 +19,7 @@ class Podcast(models.Model):
     mediatype = models.URLField(blank=True)
 
 class Comment(models.Model):
-    podcast = models.ForeignKey('podcasts.Podcast', related_name='comments', on_delete=models.DO_NOTHING)
+    podcast_id = models.TextField(max_length=256, default="0")
     body = models.TextField(max_length=240)
     date = models.DateTimeField(default=datetime.now, blank=True)
     posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
