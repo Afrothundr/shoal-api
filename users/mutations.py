@@ -1,7 +1,10 @@
 import graphene
 from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
+from podcasts.models import Podcast
+from django.db import IntegrityError
 from .types import UserType
+
 
 class CreateUser(graphene.Mutation):
     user = graphene.Field(UserType)
@@ -25,6 +28,7 @@ class CreateUser(graphene.Mutation):
 
         return CreateUser(user=user)
 
+
 class SaveUser(graphene.Mutation):
     user = graphene.Field(UserType)
 
@@ -46,6 +50,7 @@ class SaveUser(graphene.Mutation):
 
         return SaveUser(user=user)
 
+
 class AddFriend(graphene.Mutation):
     user = graphene.Field(UserType)
 
@@ -57,13 +62,14 @@ class AddFriend(graphene.Mutation):
         if user.is_anonymous:
             raise Exception('Not logged in!')
 
-        friend =  get_user_model().objects.get(id=id)
+        friend = get_user_model().objects.get(id=id)
 
         user.profile.friends.add(friend.profile)
 
         user.save()
 
         return AddFriend(user=user)
+
 
 class RemoveFriend(graphene.Mutation):
     user = graphene.Field(UserType)
@@ -76,10 +82,65 @@ class RemoveFriend(graphene.Mutation):
         if user.is_anonymous:
             raise Exception('Not logged in!')
 
-        friend =  get_user_model().objects.get(id=id)
+        friend = get_user_model().objects.get(id=id)
 
         user.profile.friends.remove(friend.profile)
 
         user.save()
 
         return RemoveFriend(user=user)
+
+
+class FollowPodcast(graphene.Mutation):
+    user = graphene.Field(UserType)
+
+    class Arguments:
+        podcast_id = graphene.ID(required=True)
+    
+    def mutate(self, info, podcast_id):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+
+        try:
+            podcast = Podcast(
+              podcast_id = podcast_id
+            )
+            podcast.save()
+
+            user.profile.podcasts.add(podcast)
+
+            user.save()
+
+            return FollowPodcast(user=user)
+
+        except IntegrityError:
+            print('dupe')
+            podcast = Podcast.objects.get(podcast_id=podcast_id)
+
+            user.profile.podcasts.add(podcast)
+
+            user.save()
+
+            return FollowPodcast(user=user)
+        pass
+
+class UnfollowPodcast(graphene.Mutation):
+    user = graphene.Field(UserType)
+
+    class Arguments:
+        podcast_id = graphene.ID(required=True)
+    
+    def mutate(self, info, podcast_id):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+
+        podcast = Podcast.objects.get(podcast_id=podcast_id)
+
+        user.profile.podcasts.remove(podcast)
+
+        user.save()
+
+        return UnfollowPodcast(user=user)
+
