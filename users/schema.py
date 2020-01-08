@@ -1,7 +1,7 @@
 import graphene
 from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
-from .mutations import CreateUser, SaveUser, AddFriend, RemoveFriend
+from .mutations import CreateUser, SaveUser, AddFriend, RemoveFriend, FollowPodcast, UnfollowPodcast
 from .types import UserType
 
 class Query(graphene.ObjectType):
@@ -23,3 +23,5 @@ class Mutation(graphene.ObjectType):
     save_user = SaveUser.Field()
     add_friend = AddFriend.Field()
     remove_friend = RemoveFriend.Field()
+    follow_podcast = FollowPodcast.Field()
+    unfollow_podcast = UnfollowPodcast.Field()
