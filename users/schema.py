@@ -7,6 +7,8 @@ from .types import UserType
 class Query(graphene.ObjectType):
     users = graphene.List(UserType)
     me = graphene.Field(UserType)
+    is_username_available = graphene.Boolean(username=graphene.String())
+    is_email_available = graphene.Boolean(email=graphene.String())
 
     def resolve_me(self, info):
         user = info.context.user
@@ -16,6 +18,15 @@ class Query(graphene.ObjectType):
 
     def resolve_users(self, info):
         return get_user_model().objects.all()
+
+    def resolve_is_username_available(self, info, username):
+        userExists = get_user_model().objects.filter(username=username)
+        return False if userExists else True
+
+    def resolve_is_email_available(self, info, email):
+        userExists = get_user_model().objects.filter(email=email)
+        return False if userExists else True
+     
 
 
 class Mutation(graphene.ObjectType):
