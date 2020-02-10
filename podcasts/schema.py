@@ -5,6 +5,7 @@ from .models import Podcast, Comment, Like
 from .types import PodcastType, CommentType, LikeType
 from .mutations import *
 
+
 class Query(graphene.ObjectType):
     podcasts = graphene.List(PodcastType)
 
@@ -22,6 +23,8 @@ class Query(graphene.ObjectType):
 
     fetch_podcast = graphene.JSONString(podcastId=graphene.ID())
 
+    search_podcasts = graphene.JSONString(search_query=graphene.ID())
+
     fetch_genres = graphene.JSONString()
 
     def resolve_podcasts(self, info, **kwargs):
@@ -35,22 +38,27 @@ class Query(graphene.ObjectType):
         genre_id = kwargs.get('genre_id', None)
         page = kwargs.get('page', None)
         util = Utilities()
-        response = util.api_request(path=f'/best_podcasts?page={page}&region=us&genre_id={genre_id}')
+        response = util.api_request(
+            path=f'/best_podcasts?page={page}&region=us&genre_id={genre_id}')
         return response.json()
-    
+
     def resolve_fetch_podcast(self, info, podcastId, **kwargs):
         util = Utilities()
         response = util.api_request(path='/podcasts/' + podcastId)
         return response.json()
-    
+
+    def resolve_search_podcasts(self, info, search_query, **kwargs):
+        util = Utilities()
+        response = util.api_request(path=f'/search?q={search_query}&type=podcast')
+        return response.json()
+
     def resolve_likes(self, info, **kwargs):
         return Like.objects.all()
-    
+
     def resolve_fetch_genres(self, info, **kwargs):
         util = Utilities()
         response = util.api_request(path='/genres/')
         return response.json()
-
 
 
 class Mutation(graphene.ObjectType):
