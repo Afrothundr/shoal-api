@@ -65,6 +65,8 @@ class CreatePocketCastSettings(graphene.Mutation):
         user = info.context.user
         if user.is_anonymous:
             raise Exception('Not logged in!')
+
+        user.profile.pocketcasts_settings.all().delete()
         
         setting = PocketCastsSettings(
             email=email,

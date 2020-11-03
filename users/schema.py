@@ -1,4 +1,8 @@
 import graphene
+import pocketcasts
+import json
+import jsonpickle
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
 from .mutations import CreateUser, SaveUser, AddFriend, RemoveFriend, FollowPodcast, UnfollowPodcast, CreatePocketCastSettings
@@ -6,6 +10,8 @@ from .types import UserType
 from django.db.models import Q, F
 from django.db.models import Value as V
 from django.db.models.functions import Concat
+from cryptography.fernet import Fernet
+from api.settings import FERNET_KEY
 
 
 class Query(graphene.ObjectType):
@@ -13,6 +19,7 @@ class Query(graphene.ObjectType):
     me = graphene.Field(UserType)
     is_username_available = graphene.Boolean(username=graphene.String())
     is_email_available = graphene.Boolean(email=graphene.String())
+    my_listening_history = graphene.JSONString()
 
     def resolve_me(self, info):
         user = info.context.user
@@ -40,6 +47,21 @@ class Query(graphene.ObjectType):
     def resolve_is_email_available(self, info, email):
         userExists = get_user_model().objects.filter(email=email)
         return False if userExists else True
+
+    def resolve_my_listening_history(self, info):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+
+        settings = user.profile.pocketcasts_settings.first()
+        if not settings:
+            raise Exception('Please set PocketCasts settings')
+
+        # Ghetto Byte decoding cause we are saving it wrong
+        password = settings.password[2:len(settings.password) - 1]
+        pocket = pocketcasts.Pocketcasts(settings.email, password=Fernet(
+            FERNET_KEY).decrypt(password.encode()))
+        return jsonpickle.encode(pocket.get_listening_history())
 
 
 class Mutation(graphene.ObjectType):

@@ -1,3 +1,4 @@
+import datetime
 from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
 
@@ -5,3 +6,137 @@ from graphene_django import DjangoObjectType
 class UserType(DjangoObjectType):
     class Meta:
         model = get_user_model()
+
+class Episode(object):
+    """Class for podcast episodes"""
+    class PlayingStatus(object):
+        """Class to allow ease of reference to play statuses"""
+        Unplayed = 0
+        Playing = 2
+        Played = 3
+
+    def __init__(self, uuid, api, podcast, **kwargs):
+        """
+
+        Args:
+            uuid (str): Episode UUID
+            api (pocetcast): Api object 
+            podcast (pocketcasts.Podcast|str): Podcast for the episode | uuid of the Podcast for the episode - Podcast object will be lazy loaded if needed
+            **kwargs: Other information about episode
+        """
+        self._podcast = podcast
+        self._api = api
+        self._uuid = uuid
+        self._id = kwargs.get('id', '')
+        self._is_deleted = kwargs.get('isDeleted', '')
+        self._is_video = bool(kwargs.get('isVideo', ''))
+        self._file_type = kwargs.get('fileType', '')
+        self._size = kwargs.get('size', '')
+
+        self._title = kwargs.get('title', '')
+        self._url = kwargs.get('url', '')
+        self._duration = kwargs.get('duration', '')
+        if kwargs.get('published', '') != '':
+            self._published_at = datetime.strptime(kwargs.get('published', ''), '%Y-%m-%dT%H:%M:%SZ')
+        else:
+            self._published_at = ''
+        self._starred = bool(kwargs.get('starred', False))
+
+        self._playing_status = kwargs.get('playingStatus', Episode.PlayingStatus.Unplayed)
+        self._played_up_to = kwargs.get('playedUpTo', '')
+
+    def __repr__(self):
+        return "%s (%r)" % (self.__class__, self.__dict__)
+    
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
+
+    @property
+    def podcast(self):
+        """Get the podcast object for the episode"""
+        if isinstance(self._podcast,str):
+            self._podcast = self._api.get_podcast(self._podcast)
+        return self._podcast
+
+    @property
+    def uuid(self):
+        """Get the episode UUID"""
+        return self._uuid
+
+    @property
+    def id(self):
+        """Get the episode ID"""
+        return self._id
+
+    @property
+    def is_deleted(self):
+        """Get the is_deleted property"""
+        return self._is_deleted
+
+    @property
+    def is_video(self):
+        """Get the is_video property"""
+        return self._is_video
+
+    @property
+    def file_type(self):
+        """Get the file type"""
+        return self._file_type
+
+    @property
+    def size(self):
+        """Get the episode size"""
+        return self._size
+
+    @property
+    def title(self):
+        """Get the episode title"""
+        return self._title
+
+    @property
+    def url(self):
+        """Get the episode URL"""
+        return self._url
+
+    @property
+    def duration(self):
+        """Get the episode duration"""
+        return self._duration
+
+    @property
+    def published_at(self):
+        """Get the episode publish time"""
+        return self._published_at
+
+    @property
+    def starred(self):
+        """Get and set the starred status"""
+        return self._starred
+
+    @starred.setter
+    def starred(self, starred):
+        star = 1 if starred else 0
+        self._api.update_starred(self.podcast, self, star)
+        self._starred = starred
+
+    @property
+    def playing_status(self):
+        """Get and set the playing status"""
+        return self._playing_status
+
+    @playing_status.setter
+    def playing_status(self, status):
+        self._api.update_playing_status(self.podcast, self, status)
+        if status == self.PlayingStatus.Unplayed:
+            self._api.update_played_position(self.podcast, self, 0)
+        self._playing_status = status
+
+    @property
+    def played_up_to(self):
+        """Get and set the play duration"""
+        return self._played_up_to
+
+    @played_up_to.setter
+    def played_up_to(self, position):
+        self._api.update_played_position(self.podcast, self, position)
+        self._played_up_to = position
