@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from cryptography.fernet import Fernet
 from api.settings import FERNET_KEY
 from profiles.models import PocketCastsSettings
+from profiles.schema import PocketCastsSettingsType
 from .types import UserType
 
 
@@ -54,7 +55,7 @@ class SaveUser(graphene.Mutation):
         return SaveUser(user=user)
 
 class CreatePocketCastSettings(graphene.Mutation):
-    user = graphene.Field(UserType)
+    setting = graphene.Field(PocketCastsSettingsType)
 
     class Arguments:
         email = graphene.String(required=True)
@@ -64,16 +65,15 @@ class CreatePocketCastSettings(graphene.Mutation):
         user = info.context.user
         if user.is_anonymous:
             raise Exception('Not logged in!')
-# TODO: FIX this shit
-        settings = PocketCastsSettings(
+        
+        setting = PocketCastsSettings(
             email=email,
             password=Fernet(FERNET_KEY).encrypt(password.encode()),
             profile=user.profile 
         )
-        user.profile.pocketcasts_settings.create(settings)
-        user.save()
+        setting.save()
 
-        return CreatePocketCastSettings(user=user)
+        return CreatePocketCastSettings(setting=setting)
 
 
 class AddFriend(graphene.Mutation):

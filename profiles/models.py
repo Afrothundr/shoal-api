@@ -14,7 +14,7 @@ class Profile(models.Model):
 class PocketCastsSettings(models.Model):
     email = models.TextField(max_length=256, blank=True)
     password = models.CharField(max_length=256, blank=True)
-    profile = models.OneToOneField('profiles.profile', related_name='pocketcasts_settings',
+    profile = models.ForeignKey('profiles.profile', related_name='pocketcasts_settings',
                                 on_delete=models.DO_NOTHING, default=None, null=True)
 
 
