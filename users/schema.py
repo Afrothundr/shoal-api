@@ -1,12 +1,11 @@
 import graphene
 import pocketcasts
-import json
-import jsonpickle
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
-from .mutations import CreateUser, SaveUser, AddFriend, RemoveFriend, FollowPodcast, UnfollowPodcast, CreatePocketCastSettings
-from .types import UserType
+from users.mutations import CreateUser, SaveUser, AddFriend, RemoveFriend, FollowPodcast, UnfollowPodcast, CreatePocketCastSettings
+from users.types import UserType
+from users.models import Episode
 from django.db.models import Q, F
 from django.db.models import Value as V
 from django.db.models.functions import Concat
@@ -19,7 +18,7 @@ class Query(graphene.ObjectType):
     me = graphene.Field(UserType)
     is_username_available = graphene.Boolean(username=graphene.String())
     is_email_available = graphene.Boolean(email=graphene.String())
-    my_listening_history = graphene.JSONString()
+    my_listening_history = graphene.List(Episode)
 
     def resolve_me(self, info):
         user = info.context.user
@@ -61,7 +60,9 @@ class Query(graphene.ObjectType):
         password = settings.password[2:len(settings.password) - 1]
         pocket = pocketcasts.Pocketcasts(settings.email, password=Fernet(
             FERNET_KEY).decrypt(password.encode()))
-        return jsonpickle.encode(pocket.get_listening_history())
+        # return jsonpickle.encode(pocket.get_listening_history())
+        episodes = pocket.get_listening_history()
+        return episodes
 
 
 class Mutation(graphene.ObjectType):

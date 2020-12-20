@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 from api.settings import FERNET_KEY
 from profiles.models import PocketCastsSettings
 from profiles.schema import PocketCastsSettingsType
-from .types import UserType
+from users.types import UserType
 
 
 class CreateUser(graphene.Mutation):
