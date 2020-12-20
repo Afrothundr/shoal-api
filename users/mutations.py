@@ -3,7 +3,11 @@ from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
 from podcasts.models import Podcast
 from django.db import IntegrityError
-from .types import UserType
+from cryptography.fernet import Fernet
+from api.settings import FERNET_KEY
+from profiles.models import PocketCastsSettings
+from profiles.schema import PocketCastsSettingsType
+from users.types import UserType
 
 
 class CreateUser(graphene.Mutation):
@@ -49,6 +53,29 @@ class SaveUser(graphene.Mutation):
         user.save()
 
         return SaveUser(user=user)
+
+class CreatePocketCastSettings(graphene.Mutation):
+    setting = graphene.Field(PocketCastsSettingsType)
+
+    class Arguments:
+        email = graphene.String(required=True)
+        password = graphene.String(required=True)
+
+    def mutate(self, info, email, password):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+
+        user.profile.pocketcasts_settings.all().delete()
+        
+        setting = PocketCastsSettings(
+            email=email,
+            password=Fernet(FERNET_KEY).encrypt(password.encode()),
+            profile=user.profile 
+        )
+        setting.save()
+
+        return CreatePocketCastSettings(setting=setting)
 
 
 class AddFriend(graphene.Mutation):

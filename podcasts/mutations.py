@@ -4,6 +4,7 @@ from graphql import GraphQLError
 from django.db import IntegrityError
 from .models import *
 
+
 class CreateComment(graphene.Mutation):
     comment = graphene.Field(CommentType)
 
@@ -15,7 +16,7 @@ class CreateComment(graphene.Mutation):
         user = info.context.user
         if user.is_anonymous:
             raise GraphQLError('You must be logged in to post a comment')
-        
+
         podcast = Podcast.objects.get(podcast_id=podcast_id)
         comment = Comment(
             podcast=podcast,
@@ -26,6 +27,7 @@ class CreateComment(graphene.Mutation):
         comment.save()
 
         return CreateComment(comment=comment)
+
 
 class RemoveComment(graphene.Mutation):
     podcast = graphene.Field(PodcastType)
@@ -47,6 +49,7 @@ class RemoveComment(graphene.Mutation):
 
         return RemoveComment(podcast=podcast)
 
+
 class CreateLike(graphene.Mutation):
     like = graphene.Field(LikeType)
 
@@ -61,13 +64,13 @@ class CreateLike(graphene.Mutation):
         user = info.context.user
         if user.is_anonymous:
             raise GraphQLError('You must be logged in to like something')
-        
+
         try:
             comment = Comment.objects.get(id=comment_id)
         except Comment.DoesNotExist:
             comment = None
 
-        try: 
+        try:
             podcast = Podcast.objects.get(podcast_id=podcast_id)
         except Podcast.DoesNotExist:
             podcast = None
@@ -78,9 +81,9 @@ class CreateLike(graphene.Mutation):
             posted_by=user
         )
 
-
         like.save()
         return CreateLike(like=like)
+
 
 class RemoveLike(graphene.Mutation):
     podcastOrComment = graphene.Field(PodcastOrCommentType)
