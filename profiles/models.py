@@ -12,10 +12,10 @@ class Profile(models.Model):
 
 
 class PocketCastsSettings(models.Model):
-    email = models.TextField(max_length=256, blank=True)
-    password = models.CharField(max_length=256, blank=True)
+    email = models.TextField(max_length=256, blank=True, null=True)
+    password = models.CharField(max_length=256, blank=True, null=True)
     profile = models.ForeignKey('profiles.profile', related_name='pocketcasts_settings',
-                                on_delete=models.DO_NOTHING, default=None, null=True)
+                                on_delete=models.DO_NOTHING, default=None, null=True, blank=True)
 
 
 @receiver(post_save, sender=User)
