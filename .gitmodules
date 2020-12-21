@@ -1,7 +1,3 @@
 [submodule "packages/pocketcasts"]
 	path = packages/pocketcasts
-	url = https://github.com/balu-/Pocket-Casts
-
-[submodule "packages/Pocket-Casts"]
-	path = packages/pocketcasts
-	url = https://github.com/balu-/Pocket-Casts
+	url = git://github.com/balu-/Pocket-Casts
