@@ -1,5 +1,6 @@
 from graphene import ObjectType, String, Boolean, ID, List, Field, Int, Date
 
+
 class Podcast(ObjectType):
     author = String()
     categories = List(String)
@@ -16,6 +17,7 @@ class Podcast(ObjectType):
     url = String()
     uuid = String()
 
+
 class Episode(ObjectType):
     duration = Int()
     file_type = String()
@@ -31,5 +33,3 @@ class Episode(ObjectType):
     url = String()
     uuid = ID()
     podcast = Field(Podcast)
-
-
