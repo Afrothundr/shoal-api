@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'podcasts',
     'users',
     'profiles',
-    'packages.Pocket-Casts'
+    'packages.pcasts'
 ]
 
 MIDDLEWARE = [

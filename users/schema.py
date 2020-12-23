@@ -1,5 +1,5 @@
 import graphene
-from packages.Pocket-Casts import pocketcasts
+from packages.pcasts import pocketcasts
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
