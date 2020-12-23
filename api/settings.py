@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'podcasts',
     'users',
-    'profiles'
+    'profiles',
+    'packages.Pocket-Casts'
 ]
 
 MIDDLEWARE = [
