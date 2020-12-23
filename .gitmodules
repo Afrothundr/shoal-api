@@ -1,3 +1,0 @@
-[submodule "packages/pocketcasts"]
-	path = packages/pocketcasts
-	url = git://github.com/balu-/Pocket-Casts
