@@ -38,7 +38,7 @@ rope==0.14.0
 Rx==1.6.1
 singledispatch==3.4.0.3
 six==1.13.0
-sqlparse==0.4.1
+sqlparse==0.4.2
 typed-ast==1.4.0
 Unidecode==1.1.1
 urllib3==1.25.7
